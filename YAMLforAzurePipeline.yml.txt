@@ -1,0 +1,28 @@
+#Presta shop pipeline
+trigger:
+- main
+
+pool:
+    vmImage: ubuntu-latest
+
+steps:
+- checkout: self
+
+- task: Npm@1
+  displayName: npm custom
+  inputs:
+      command: custom
+      verbose: false
+      customCommand: install -g newman
+
+- task: CmdLine@2
+  displayName: Run Newman Test Results
+  inputs:
+      script: newman run $(Build.SourcesDirectory)\PrestaShop_collection.postman_collection.json 
+      -x -r junit --reporter-junit-export $(build.artifactstagingdirectory)\Results\JunitResults.xml
+
+- task: PublishTestResults@2
+  displayName: Publish Test Results
+  inputs:
+      testResultsFiles: '**\*.xml'
+      searchFolder: $(build.artifactstagingdirectory)
